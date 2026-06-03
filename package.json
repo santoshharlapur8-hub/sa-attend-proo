@@ -4,47 +4,19 @@
   "description": "Professional Attendance Management System",
   "main": "server.js",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "export": "next export",
-    "server": "node server.js",
-    "db:init": "node scripts/initDB.js",
-    "db:migrate": "node scripts/migrate.js"
+    "dev": "node server.js",
+    "start": "node server.js",
+    "build": "echo 'No build needed'"
   },
   "dependencies": {
-    "next": "^14.0.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "recharts": "^2.10.0",
-    "axios": "^1.6.0",
-    "bcryptjs": "^2.4.3",
-    "jsonwebtoken": "^9.1.0",
     "express": "^4.18.2",
     "cors": "^2.8.5",
-    "dotenv": "^16.3.1",
     "pg": "^8.11.0",
-    "nodemailer": "^6.9.7",
-    "multer": "^1.4.5-lts.1",
-    "date-fns": "^2.30.0",
-    "zustand": "^4.4.1",
-    "react-query": "^3.39.3"
-  },
-  "devDependencies": {
-    "eslint": "^8.53.0",
-    "prettier": "^3.1.0"
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.1.0",
+    "dotenv": "^16.3.1"
   },
   "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=9.0.0"
-  },
-  "keywords": [
-    "attendance",
-    "management",
-    "HR",
-    "employee",
-    "tracking"
-  ],
-  "author": "SA Tech Solutions",
-  "license": "MIT"
+    "node": "18"
+  }
 }
