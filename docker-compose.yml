@@ -1,0 +1,112 @@
+# docker-compose.yml - Complete SA Attend Pro Stack
+
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: sa-attend-postgres
+    environment:
+      POSTGRES_USER: sa_user
+      POSTGRES_PASSWORD: secure_password_change_this
+      POSTGRES_DB: attend_pro_db
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./initDB.js:/docker-entrypoint-initdb.d/01-init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sa_user -d attend_pro_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - sa-attend-network
+
+  # Redis Cache (Optional)
+  redis:
+    image: redis:7-alpine
+    container_name: sa-attend-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - sa-attend-network
+
+  # SA Attend Pro Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sa-attend-pro
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://sa_user:secure_password_change_this@postgres:5432/attend_pro_db
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: your_super_secret_jwt_key_change_this_12345
+      API_PORT: 3000
+      NEXT_PUBLIC_API_URL: http://localhost:3000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - app_logs:/app/logs
+      - app_uploads:/app/uploads
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - sa-attend-network
+    restart: unless-stopped
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: sa-attend-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - app
+    networks:
+      - sa-attend-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  app_logs:
+    driver: local
+  app_uploads:
+    driver: local
+
+networks:
+  sa-attend-network:
+    driver: bridge
+
+# Quick start guide:
+# 1. Copy .env.example to .env and update values
+# 2. Run: docker-compose up -d
+# 3. Initialize DB: docker-compose exec app node scripts/initDB.js
+# 4. Visit: http://localhost
+# 5. View logs: docker-compose logs -f app
